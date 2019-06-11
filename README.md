@@ -1,8 +1,6 @@
 # kexport
 
-Google Kubernetes Engine usage export to BigQuery (based on [professional-services](https://github.com/mchmarny/professional-services)). The executable takes no arguments, it derives project ID from metadata server and polls all clusters in that project (default every min) and loads extracted data (pod, reserved and used cpu, reserved and used ram) into BigQuery table (default `kadvice.metrics`). The default dataset and table as well as polling interval can overitten using `DATASET`, `TABLE`, and `INTERVAL` env vars respectively.
-
-This is not an officially supported Google product.
+GKE pod metric export to BigQuery (based on [professional-services](https://github.com/mchmarny/professional-services)). Single container which derives project ID from metadata server and polls all clusters in that project every min and then loads extracted data (pod, reserved and used cpu, reserved and used ram) into BigQuery table (default `kadvice.metrics`). The default dataset as well as the table and polling interval can overwritten using `DATASET`, `TABLE`, and `INTERVAL` env vars respectively.
 
 ## Deployment
 
@@ -35,7 +33,7 @@ Outputs
 | 2019-06-11 15:01:22.762175 UTC 	    | cloudylabs 	| cr 	| demo 	| default 	| kdemo-x6rfc-deployment-8fc5bfb9f-zvp77 	| 25 	| 0 	| 5 	| 15822848 	|
 ```
 
-Similarly you can generate application-level aggrade reports (e.g. average RAM and CPU used by specific app)
+Similarly you can generate application-level aggregate reports (e.g. average RAM and CPU used by specific app)
 
 ```sql
 SELECT
