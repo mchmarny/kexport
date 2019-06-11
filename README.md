@@ -8,7 +8,7 @@ GKE pod metric export to BigQuery (based on [professional-services](https://gith
 PROJECT=$(gcloud config get-value project)
 kubectl run kexport --env="INTERVAL=30s" \
 	--replicas=1 --generator=run-pod/v1 \
-	--image="gcr.io/${PROJECT}-public/kexport:0.3.3"
+	--image="gcr.io/cloudylabs-public/kexport:0.3.3"
 ```
 
 # Example Output
