@@ -1,4 +1,3 @@
-RELEASE=0.2.1
 PROJECT=$(gcloud config get-value project)
 
 .PHONY: clean
@@ -9,9 +8,13 @@ mod:
 
 image: mod
 	gcloud builds submit \
-		--project $(PROJECT)-public \
-		--tag gcr.io/$(PROJECT)-public/kexport:$(RELEASE)
+		--project cloudylabs-public \
+		--tag gcr.io/cloudylabs-public/kexport:0.3.4
 
-run:
-	kubectl run kexport --replicas=1 --generator=run-pod/v1 \
-		--image=gcr.io/$(PROJECT)-public/kexport:$(RELEASE)
+pod:
+	kubectl run kexport --env="INTERVAL=30s" \
+		--replicas=1 --generator=run-pod/v1 \
+		--image=gcr.io/cloudylabs-public/kexport:0.3.4
+
+podless:
+	kubectl delete pod kexport
