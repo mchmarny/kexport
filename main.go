@@ -7,12 +7,13 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"strings"
 	"time"
 
-	autoconfig "github.com/dparrish/go-autoconfig"
-
 	"cloud.google.com/go/bigquery"
+	meta "cloud.google.com/go/compute/metadata"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/container/v1"
 	"google.golang.org/api/googleapi"
@@ -29,12 +30,12 @@ const (
 )
 
 var (
-	logger  = log.New(os.Stdout, "[ke] ", 0)
-	projectID = mustEnvVar("PROJECT", notSetValue)
-	datasetName = mustEnvVar("DATASET", "kadvice")
-	tableName = mustEnvVar("TABLE", "metrics")
+	logger         = log.New(os.Stdout, "[ke] ", 0)
+	projectID      = mustEnvVar("PROJECT", notSetValue)
+	datasetName    = mustEnvVar("DATASET", "kadvice")
+	tableName      = mustEnvVar("TABLE", "metrics")
 	intervalPeriod = mustEnvVar("INTERVAL", "60s")
-
+	numGoroutines  = 10
 )
 
 type PodMetricsList struct {
@@ -70,11 +71,6 @@ type Usage struct {
 	UsedCPU        int64     `bigquery:"used_cpu"`
 	UsedRAM        int64     `bigquery:"used_ram"`
 }
-
-var (
-	configFile    = flag.String("config", "config.json", "Configuration file")
-	numGoroutines = flag.Int("goroutines", 10, "Number of parallel goroutines")
-)
 
 func createDataset(ctx context.Context, dataset *bigquery.Dataset) error {
 	err := dataset.Create(ctx, nil)
@@ -198,6 +194,8 @@ func main() {
 	// Load the configuration file from disk.
 	ctx := context.Background()
 
+	parseProject()
+
 	// Create the BigQuery client.
 	bq, err := bigquery.NewClient(ctx, projectID)
 	if err != nil {
@@ -216,8 +214,8 @@ func main() {
 	clusters := getAllClusters(ctx)
 
 	// Start all background goroutines.
-	ch := make(chan *Cluster, *numGoroutines)
-	for i := 0; i < *numGoroutines; i++ {
+	ch := make(chan *Cluster, numGoroutines)
+	for i := 0; i < numGoroutines; i++ {
 		go backgroundThread(ctx, table, ch)
 	}
 
@@ -250,19 +248,19 @@ func mustEnvVar(key, fallbackValue string) string {
 }
 
 func parseProject() {
-	if project != notSetValue {
+	if projectID != notSetValue {
 		return
 	}
 
 	mc := meta.NewClient(&http.Client{Transport: userAgentTransport{
-		userAgent: appName,
+		userAgent: "kexport",
 		base:      http.DefaultTransport,
 	}})
 	p, err := mc.ProjectID()
 	if err != nil {
 		logger.Fatalf("Error creating metadata client: %v", err)
 	}
-	project = p
+	projectID = p
 }
 
 func getPod(usage map[string]*Usage, project, cluster, namespace, pod string) *Usage {
@@ -348,24 +346,35 @@ func getAllClusters(ctx context.Context) []*Cluster {
 
 	log.Printf("Fetching a list of all clusters")
 	var ret []*Cluster
-	for _, project := range projectID {
-		clusters, err := gke.Projects.Zones.Clusters.List(project, "-").Do()
-		if err != nil {
-			log.Fatalf("Could not get the list of GKE clusters: %v", err)
-		}
-		for _, cluster := range clusters.Clusters {
-			clientset, err := getClientset(ctx, cluster, token.AccessToken)
-			if err != nil {
-				log.Printf("Error getting clientset for %s/%s: %v", project, cluster.Name, err)
-				continue
-			}
-			ret = append(ret, &Cluster{
-				project:   project,
-				cluster:   cluster.Name,
-				clientset: clientset,
-			})
-			log.Printf("  %s/%s", project, cluster.Name)
-		}
+	clusters, err := gke.Projects.Zones.Clusters.List(projectID, "-").Do()
+	if err != nil {
+		log.Fatalf("Could not get the list of GKE clusters: %v", err)
 	}
+	for _, cluster := range clusters.Clusters {
+		clientset, err := getClientset(ctx, cluster, token.AccessToken)
+		if err != nil {
+			log.Printf("Error getting clientset for %s/%s: %v", projectID, cluster.Name, err)
+			continue
+		}
+		ret = append(ret, &Cluster{
+			project:   projectID,
+			cluster:   cluster.Name,
+			clientset: clientset,
+		})
+		log.Printf("  %s/%s", projectID, cluster.Name)
+	}
+
 	return ret
+}
+
+// GCP Metadata
+// https://godoc.org/cloud.google.com/go/compute/metadata#example-NewClient
+type userAgentTransport struct {
+	userAgent string
+	base      http.RoundTripper
+}
+
+func (t userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("User-Agent", t.userAgent)
+	return t.base.RoundTrip(req)
 }
