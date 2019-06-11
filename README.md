@@ -22,14 +22,14 @@ SELECT * FROM `kadvice.metrics`
 Outputs
 
 ```shell
-| metric_time 	| project 	| cluster 	| namespace 	| serviceaccount 	| pod 	| reserved_cpu 	| reserved_ram 	| used_cpu 	| used_ram 	|
-|--------------------------------	|------------	|---------	|-----------------	|----------------	|-------------------------------------	|--------------	|--------------	|----------	|----------	|
-| 2019-06-11 14:30:52.738756 UTC 	| cloudylabs 	| cr 	| knative-serving 	| controller 	| webhook-759c4676bd-c2nqz 	| 20 	| 20971520 	| 3 	| 7917568 	|
-| 2019-06-11 14:02:51.535108 UTC 	| cloudylabs 	| cr 	| knative-serving 	| controller 	| cloudrun-controller-7956cd9b6-wptnx 	| 0 	| 0 	| 4 	| 9052160 	|
-| 2019-06-11 14:30:52.738749 UTC 	| cloudylabs 	| cr 	| knative-serving 	| controller 	| controller-5ff95479f5-kdshq 	| 100 	| 104857600 	| 27 	| 21028864 	|
-| 2019-06-11 14:45:22.749121 UTC 	| cloudylabs 	| cr 	| knative-serving 	| controller 	| networking-istio-b7cccb5fb-wsm2s 	| 100 	| 104857600 	| 5 	| 12193792 	|
-| 2019-06-11 14:00:51.481584 UTC 	| cloudylabs 	| cr 	| knative-serving 	| controller 	| webhook-759c4676bd-c2nqz 	| 20 	| 20971520 	| 2 	| 7917568 	|
-| 2019-06-11 14:12:21.481379 UTC 	| cloudylabs 	| cr 	| knative-serving 	| controller 	| networking-istio-b7cccb5fb-wsm2s 	| 100 	| 104857600 	| 6 	| 12193792 	|
+| metric_time                    | project    | cluster | namespace       | serviceaccount | pod                                 | reserved_cpu | reserved_ram | used_cpu | used_ram |
+| ------------------------------ | ---------- | ------- | --------------- | -------------- | ----------------------------------- | ------------ | ------------ | -------- | -------- |
+| 2019-06-11 14:30:52.738756 UTC | cloudylabs | cr      | knative-serving | controller     | webhook-759c4676bd-c2nqz            | 20           | 20971520     | 3        | 7917568  |
+| 2019-06-11 14:02:51.535108 UTC | cloudylabs | cr      | knative-serving | controller     | cloudrun-controller-7956cd9b6-wptnx | 0            | 0            | 4        | 9052160  |
+| 2019-06-11 14:30:52.738749 UTC | cloudylabs | cr      | knative-serving | controller     | controller-5ff95479f5-kdshq         | 100          | 104857600    | 27       | 21028864 |
+| 2019-06-11 14:45:22.749121 UTC | cloudylabs | cr      | knative-serving | controller     | networking-istio-b7cccb5fb-wsm2s    | 100          | 104857600    | 5        | 12193792 |
+| 2019-06-11 14:00:51.481584 UTC | cloudylabs | cr      | knative-serving | controller     | webhook-759c4676bd-c2nqz            | 20           | 20971520     | 2        | 7917568  |
+| 2019-06-11 14:12:21.481379 UTC | cloudylabs | cr      | knative-serving | controller     | networking-istio-b7cccb5fb-wsm2s    | 100          | 104857600    | 6        | 12193792 |
 ```
 
 Similarly you can generate application-level aggregate reports (e.g. average RAM and CPU used by specific app)
